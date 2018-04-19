@@ -4,7 +4,9 @@ import lightgbm as lgb
 import pandas as pd
 import time
 from sklearn import preprocessing
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
+from sklearn.model_selection import train_test_split
 
 warnings.filterwarnings("ignore")
 
@@ -32,17 +34,17 @@ def base_process(data):
     for col in ['item_id', 'item_brand_id', 'item_city_id']:
         data[col] = lbl.fit_transform(data[col])
     print(
-        '--------------------------------------------------------------user--------------------------------------------------------------')
+        '------------------------------------------------------------user--------------------------------------------------------------')
     for col in ['user_id']:
         data[col] = lbl.fit_transform(data[col])
     print('user 0,1 feature')
     data['gender0'] = data['user_gender_id'].apply(lambda x: 1 if x == -1 else 2)
     data['age0'] = data['user_age_level'].apply(
-            lambda x: 1 if x == 1004 | x == 1005 | x == 1006 | x == 1007  else 2)
+            lambda x: 1 if x == 1000 | x == 1001 | x == 1007 else 2)
     data['occupation0'] = data['user_occupation_id'].apply(
-            lambda x: 1 if x == -1 | x == 2003  else 2)
+            lambda x: 1 if x == -1 | x == 2003 | x == 2004 else 2)
     data['star0'] = data['user_star_level'].apply(
-            lambda x: 1 if x == -1 | x == 3000 | x == 3001  else 2)
+            lambda x: 1 if x == -1 | x == 3009 | x == 3010 else 2)
     print(
         '--------------------------------------------------------------context--------------------------------------------------------------')
     data['realtime'] = data['context_timestamp'].apply(timestamp_datetime)
@@ -57,7 +59,7 @@ def base_process(data):
                         lambda x: str(str(x).split(';')[i]) if len(str(x).split(';')) > i else ''))
     print('context 0,1 feature')
     data['context_page0'] = data['context_page_id'].apply(
-            lambda x: 1 if x == 4001 | x == 4002 | x == 4003 | x == 4004 | x == 4007  else 2)
+            lambda x: 1 if x == 4001 | x == 4002 | x == 4003 | x == 4004 | x == 4007 else 2)
     print(
         '--------------------------------------------------------------shop--------------------------------------------------------------')
     for col in ['shop_id']:
@@ -77,9 +79,9 @@ def map_hour(x):
 
 
 def deliver(x):
-    jiange = 0.1
+    step = 0.1
     for i in range(1, 20):
-        if (x >= 4.1 + jiange * (i - 1)) & (x <= 4.1 + jiange * i):
+        if (x >= 4.1 + step * (i - 1)) & (x <= 4.1 + step * i):
             return i + 1
     if x == -5:
         return 1
@@ -95,9 +97,9 @@ def deliver1(x):
 
 
 def review(x):
-    jiange = 0.02
+    step = 0.02
     for i in range(1, 30):
-        if (x >= 0.714 + jiange * (i - 1)) & (x <= 0.714 + jiange * i):
+        if (x >= 0.714 + step * (i - 1)) & (x <= 0.714 + step * i):
             return i + 1
     if x == -1:
         return 1
@@ -113,9 +115,9 @@ def review1(x):
 
 
 def service(x):
-    jiange = 0.1
+    step = 0.1
     for i in range(1, 20):
-        if (x >= 3.93 + jiange * (i - 1)) & (x <= 3.93 + jiange * i):
+        if (x >= 3.93 + step * (i - 1)) & (x <= 3.93 + step * i):
             return i + 1
     if x == -1:
         return 1
@@ -131,9 +133,9 @@ def service1(x):
 
 
 def describe(x):
-    jiange = 0.1
+    step = 0.1
     for i in range(1, 30):
-        if (x >= 3.93 + jiange * (i - 1)) & (x <= 3.93 + jiange * i):
+        if (x >= 3.93 + step * (i - 1)) & (x <= 3.93 + step * i):
             return i + 1
     if x == -1:
         return 1
@@ -148,7 +150,7 @@ def describe1(x):
         return 3
 
 
-def shijian(data):
+def encodeHour(data):
     data['hour_map'] = data['hour'].apply(map_hour)
     return data
 
@@ -524,10 +526,6 @@ def lgbCV(train, test):
            c not in ['is_trade', 'item_category_list', 'item_property_list',
                      'predict_category_property', 'instance_id',
                      'context_id', 'realtime', 'context_timestamp']]
-    # cat = ['sale_price', 'gender_star', 'user_age_level', 'item_price_level', 'item_sales_level', 'sale_collect',
-    #        'price_collect', 'item_brand_id', 'user_star_level', 'item_id', 'shop_id',
-    #        'item_city_id', 'context_page_id', 'gender_age', 'shop_star_level', 'item_pv_level', 'user_occupation_id',
-    #        'day', 'gender_occ', 'user_gender_id']
     X = train[col]
     y = train['is_trade'].values
     X_tes = test[col]
@@ -552,6 +550,7 @@ def lgbCV(train, test):
     test['pred'] = pred
     test['index'] = range(len(test))
     print('los:', log_loss(test['is_trade'], test['pred']))
+    print('best_iter:', best_iter)
     return best_iter
 
 
@@ -583,7 +582,47 @@ def sub(train, test, best_iter):
     sub = pd.read_csv("input/test.txt", sep="\s+")
     sub = pd.merge(sub, sub1, on=['instance_id'], how='left')
     sub = sub.fillna(0)
-    sub[['instance_id', 'predicted_score']].to_csv('result/result0416.txt', sep=" ", index=False)
+    sub[['instance_id', 'predicted_score']].to_csv('result/result0418.txt', sep=" ", index=False)
+
+
+def result(model, train, test):
+    col = [c for c in train if
+           c not in ['is_trade', 'item_category_list', 'item_property_list',
+                     'predict_category_property', 'instance_id',
+                     'context_id', 'realtime', 'context_timestamp']]
+    X = train[col]
+    Y = train['is_trade'].values
+    model.fit(X, Y)
+    y_pred = model.predict_proba(test[col])[:, 1]
+    result = pd.DataFrame({'instance_id': test['instance_id'], 'predicted_score': y_pred})
+    result.to_csv('result/result0418_lr.txt', sep=" ", index=False)
+
+
+def model_log_loss(model, train):
+    # col = [c for c in train if
+    #        c not in ['is_trade', 'item_category_list', 'item_property_list',
+    #                  'predict_category_property', 'instance_id',
+    #                  'context_id', 'realtime', 'context_timestamp']]
+    col = ['item_price_level', 'item_sales_level', 'item_collected_level', 'item_pv_level',
+           'user_gender_id', 'user_age_level', 'user_star_level', 'context_page_id',
+           'shop_review_num_level', 'shop_review_positive_rate', 'shop_star_level',
+           'shop_score_service', 'shop_score_delivery', 'shop_score_description'
+        , 'item_id_shop_rev_cnt', 'item_id_shop_rev_prob', 'item_brand_id_shop_rev_cnt',
+           'item_brand_id_shop_rev_prob', 'item_city_id_shop_rev_cnt', 'item_city_id_shop_rev_prob',
+           'item_price_level_shop_rev_cnt', 'item_price_level_shop_rev_prob',
+           'item_sales_level_shop_rev_cnt', 'item_sales_level_shop_rev_prob',
+           'item_collected_level_shop_rev_cnt', 'item_collected_level_shop_rev_prob',
+           'item_pv_level_shop_rev_cnt', 'item_pv_level_shop_rev_prob']
+    X = train[col]
+    Y = train['is_trade'].values
+    # X.to_csv('result/feature_a.txt', sep=" ", index=False)
+    X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.4, random_state=0)
+    print("Training...")
+    model.fit(X_train, y_train)
+    print("Predicting...")
+    y_prediction = model.predict_proba(X_test)
+    test_pred = y_prediction[:, 1]
+    print('log_loss:', log_loss(y_test, test_pred))
 
 
 if __name__ == "__main__":
@@ -593,7 +632,7 @@ if __name__ == "__main__":
     data = data.drop_duplicates(subset='instance_id')
     print('make feature')
     data = base_process(data)
-    data = shijian(data)
+    data = encodeHour(data)
     data = shop_fenduan(data)
     data = slide_cnt(data)
     data = zuhe(data)
@@ -602,9 +641,13 @@ if __name__ == "__main__":
     data = user_item(data)
     data = user_shop(data)
     data = shop_item(data)
-    train = data[(data['day'] >= 18) & (data['day'] <= 23)]
-    test = data[(data['day'] == 24)]
-    best_iter = lgbCV(train, test)
     train = data[data.is_trade.notnull()]
-    test = data[data.is_trade.isnull()]
-    sub(train, test, best_iter)
+    # train = data[(data['day'] >= 18) & (data['day'] <= 23)]
+    # test = data[(data['day'] == 24)]
+    X_train, X_test = train_test_split(train, test_size=0.4, random_state=0)
+    best_iter = lgbCV(X_train, X_test)
+    # train = data[data.is_trade.notnull()]
+    # test = data[data.is_trade.isnull()]
+    # sub(train, test, best_iter)
+    # result(train, test)
+    # model_log_loss(LogisticRegression(C=10, n_jobs=-1), train)
