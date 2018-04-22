@@ -550,11 +550,12 @@ def lgbCV(train, test):
     lgb0 = lgb.LGBMClassifier(
             objective='binary',
             num_leaves=35,
-            depth=8,
-            learning_rate=0.05,
+            max_depth=8,
+            learning_rate=0.03,
             seed=2018,
             colsample_bytree=0.8,
             subsample=0.9,
+            min_sum_hessian_in_leaf=100,
             n_estimators=20000)
     lgb_model = lgb0.fit(X, y, eval_set=[(X_tes, y_tes)], early_stopping_rounds=200)
     best_iter = lgb_model.best_iteration_
@@ -581,11 +582,12 @@ def sub(train, test, best_iter):
     lgb0 = lgb.LGBMClassifier(
             objective='binary',
             num_leaves=35,
-            depth=8,
-            learning_rate=0.05,
+            max_depth=8,
+            learning_rate=0.03,
             seed=2018,
             colsample_bytree=0.8,
             subsample=0.9,
+            min_sum_hessian_in_leaf=100,
             n_estimators=best_iter)
     lgb_model = lgb0.fit(X, y)
     predictors = [i for i in X.columns]
@@ -602,37 +604,48 @@ def sub(train, test, best_iter):
 
 
 def result(model, train, test):
-    col = [c for c in train if
-           c not in ['is_trade', 'item_category_list', 'item_property_list',
-                     'predict_category_property', 'instance_id',
-                     'context_id', 'realtime', 'context_timestamp']]
+    # col = [c for c in train if
+    #        c not in ['is_trade', 'item_category_list', 'item_property_list',
+    #                  'predict_category_property', 'instance_id',
+    #                  'context_id', 'realtime', 'context_timestamp']]
+
+    col = ['item_price_level', 'item_sales_level', 'item_collected_level', 'item_pv_level',
+           'user_gender_id', 'user_age_level', 'user_star_level', 'context_page_id',
+           'shop_review_num_level', 'shop_review_positive_rate', 'shop_star_level',
+           'shop_score_service', 'shop_score_delivery', 'shop_score_description',
+           'day', 'hour',
+           'item_category_list2', 'item_property_list3', 'gender0', 'age0', 'occupation0',
+           'star0', 'predict_category_property2', 'shop_score_delivery0', 'normal_shop',
+           'user_cnt1', 'item_cnt1', 'sale_price',
+           'item_brand_id_shop_rev_prob', 'item_city_id_shop_rev_cnt',
+           'item_city_id_shop_rev_prob',
+           'user_cnt1', 'item_cnt1', 'shop_cnt1', 'user_cntx', 'item_cntx', 'shop_cntx']
     X = train[col]
     Y = train['is_trade'].values
+    X.fillna(0)
     model.fit(X, Y)
     y_pred = model.predict_proba(test[col])[:, 1]
     result = pd.DataFrame({'instance_id': test['instance_id'], 'predicted_score': y_pred})
-    result.to_csv('result/result0418_lr.txt', sep=" ", index=False)
+    result.to_csv('result/result0422_lr.txt', sep=" ", index=False)
 
 
 def model_log_loss(model, train):
-    col = [c for c in train if
-           c not in ['is_trade', 'item_category_list', 'item_property_list',
-                     'predict_category_property', 'instance_id',
-                     'context_id', 'context_page_id', 'realtime', 'context_timestamp']]
-    # col = ['item_price_level', 'item_sales_level', 'item_collected_level', 'item_pv_level',
-    #        'user_gender_id', 'user_age_level', 'user_star_level', 'context_page_id',
-    #        'user_occupation_id',
-    #        'item_category_list2', 'item_property_list3', 'gender0', 'age0', 'occupation0', 'star0',
-    #        'day', 'hour', 'predict_category_property2', 'shop_score_delivery0', 'normal_shop',
-    #        'user_cnt1', 'item_cnt1','sale_price',
-    #        'shop_review_num_level', 'shop_review_positive_rate', 'shop_star_level',
-    #        'shop_score_service', 'shop_score_delivery', 'shop_score_description',
-    #        'item_id_shop_rev_cnt', 'item_id_shop_rev_prob', 'item_brand_id_shop_rev_cnt',
-    #        'item_brand_id_shop_rev_prob', 'item_city_id_shop_rev_cnt', 'item_city_id_shop_rev_prob',
-    #        'item_price_level_shop_rev_cnt', 'item_price_level_shop_rev_prob',
-    #        'item_sales_level_shop_rev_cnt', 'item_sales_level_shop_rev_prob',
-    #        'item_collected_level_shop_rev_cnt', 'item_collected_level_shop_rev_prob',
-    #        'item_pv_level_shop_rev_cnt', 'item_pv_level_shop_rev_prob']
+    # col = [c for c in train if
+    #        c not in ['is_trade', 'item_category_list', 'item_property_list',
+    #                  'predict_category_property', 'instance_id',
+    #                  'context_id', 'context_page_id', 'realtime', 'context_timestamp']]
+
+    col = ['item_price_level', 'item_sales_level', 'item_collected_level', 'item_pv_level',
+           'user_gender_id', 'user_age_level', 'user_star_level', 'context_page_id',
+           'shop_review_num_level', 'shop_review_positive_rate', 'shop_star_level',
+           'shop_score_service', 'shop_score_delivery', 'shop_score_description',
+           'day', 'hour',
+           'item_category_list2', 'item_property_list3', 'gender0', 'age0', 'occupation0',
+           'star0', 'predict_category_property2', 'shop_score_delivery0', 'normal_shop',
+           'user_cnt1', 'item_cnt1', 'sale_price',
+           'item_brand_id_shop_rev_prob', 'item_city_id_shop_rev_cnt',
+           'item_city_id_shop_rev_prob',
+           'user_cnt1', 'item_cnt1', 'shop_cnt1', 'user_cntx', 'item_cntx', 'shop_cntx']
     X = train[col]
     X.fillna(0)
     Y = train['is_trade'].values
@@ -662,14 +675,15 @@ if __name__ == "__main__":
     data = user_item(data)
     data = user_shop(data)
     data = shop_item(data)
-    train = data[data.is_trade.notnull()]
-    train.to_csv('result/feature_a_0422.txt', sep=" ", index=False)
-    # train = data[(data['day'] >= 18) & (data['day'] <= 23)]
-    # test = data[(data['day'] == 24)]
-    # X_train, X_test = train_test_split(train, test_size=0.1, random_state=0)
-    # best_iter = lgbCV(train, test)
     # train = data[data.is_trade.notnull()]
-    # test = data[data.is_trade.isnull()]
-    # sub(train, test, best_iter)
-    # result(train, test)
+    # train.to_csv('result/feature_a_0422.txt', sep=" ", index=False)
+    train = data[(data['day'] >= 18) & (data['day'] <= 23)]
+    test = data[(data['day'] == 24)]
+    # X_train, X_test = train_test_split(train, test_size=0.1, random_state=0)
+    best_iter = lgbCV(train, test)
+    train = data[data.is_trade.notnull()]
+    test = data[data.is_trade.isnull()]
+    test.to_csv('result/test_0422.txt', sep=" ", index=False)
+    sub(train, test, best_iter)
+    # result(LogisticRegression(C=10, n_jobs=-1), train, test)
     # model_log_loss(LogisticRegression(C=10, n_jobs=-1), train)
