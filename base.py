@@ -13,17 +13,50 @@ import lightgbm as lgb
 
 warnings.filterwarnings("ignore")
 
-train = pd.read_csv("input/train.txt", sep="\s+")
+# train = pd.read_csv("input/train.txt", sep="\s+")
+train = pd.read_csv("result/feature_a_0422.txt", sep="\s+")
 test = pd.read_csv("input/test.txt", sep="\s+")
 # data = pd.concat([train, test])
+
+# select_cols = ['item_price_level', 'item_sales_level', 'item_collected_level', 'item_pv_level',
+#                'user_gender_id', 'user_age_level', 'user_star_level', 'context_page_id',
+#                'shop_review_num_level', 'shop_review_positive_rate', 'shop_star_level',
+#                'shop_score_service', 'shop_score_delivery', 'shop_score_description']
+#
 
 select_cols = ['item_price_level', 'item_sales_level', 'item_collected_level', 'item_pv_level',
                'user_gender_id', 'user_age_level', 'user_star_level', 'context_page_id',
                'shop_review_num_level', 'shop_review_positive_rate', 'shop_star_level',
-               'shop_score_service', 'shop_score_delivery', 'shop_score_description']
+               'shop_score_service', 'shop_score_delivery', 'shop_score_description',
+               'day', 'hour',
+               'item_category_list2', 'item_property_list3', 'gender0', 'age0', 'occupation0',
+               'star0', 'predict_category_property2', 'shop_score_delivery0', 'normal_shop',
+               'user_cnt1', 'item_cnt1', 'sale_price',
+               'item_brand_id_shop_rev_prob', 'item_city_id_shop_rev_cnt',
+               'item_city_id_shop_rev_prob',
+               'user_cnt1', 'item_cnt1', 'shop_cnt1', 'user_cntx', 'item_cntx', 'shop_cntx']
+
+
+# select_cols = ['item_price_level', 'item_sales_level', 'item_collected_level', 'item_pv_level',
+#                'user_gender_id', 'user_age_level', 'user_star_level', 'context_page_id',
+#                'user_occupation_id',
+#                'item_category_list2', 'item_property_list3', 'gender0', 'age0', 'occupation0',
+#                'star0',
+#                'day', 'hour', 'predict_category_property2', 'shop_score_delivery0', 'normal_shop',
+#                'user_cnt1', 'item_cnt1', 'sale_price',
+#                'shop_review_num_level', 'shop_review_positive_rate', 'shop_star_level',
+#                'shop_score_service', 'shop_score_delivery', 'shop_score_description',
+#                'item_id_shop_rev_cnt', 'item_id_shop_rev_prob', 'item_brand_id_shop_rev_cnt',
+#                'item_brand_id_shop_rev_prob', 'item_city_id_shop_rev_cnt',
+#                'item_city_id_shop_rev_prob',
+#                'item_price_level_shop_rev_cnt', 'item_price_level_shop_rev_prob',
+#                'item_sales_level_shop_rev_cnt', 'item_sales_level_shop_rev_prob',
+#                'item_collected_level_shop_rev_cnt', 'item_collected_level_shop_rev_prob',
+#                'item_pv_level_shop_rev_cnt', 'item_pv_level_shop_rev_prob']
 
 
 def model_log_loss(model):
+    train.fillna(0)
     X = train[select_cols]
     Y = train['is_trade']
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.4, random_state=0)
@@ -67,7 +100,7 @@ def lgb_log_loss():
 
 
 if __name__ == "__main__":
-    lgb_log_loss()
+    # lgb_log_loss()
     # print(test['instance_id'].values)
     # result(LogisticRegression(C=10, n_jobs=-1))
     print("---LogisticRegression------")

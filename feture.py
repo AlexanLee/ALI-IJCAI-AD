@@ -40,11 +40,9 @@ def base_process(data):
     print('user 0,1 feature')
     data['gender0'] = data['user_gender_id'].apply(lambda x: 1 if x == -1 else 2)
     data['age0'] = data['user_age_level'].apply(
-            lambda x: 1 if x == 1000 | x == 1001 | x == 1007 else 2)
-    data['occupation0'] = data['user_occupation_id'].apply(
-            lambda x: 1 if x == -1 | x == 2003 | x == 2004 else 2)
-    data['star0'] = data['user_star_level'].apply(
-            lambda x: 1 if x == -1 | x == 3009 | x == 3010 else 2)
+            lambda x: 1 if x == 1000 | x == 1001 | x == -1 else 2)
+    data['occupation0'] = data['user_occupation_id'].apply(occupation)
+    data['star0'] = data['user_star_level'].apply(use_star_level)
     print(
         '--------------------------------------------------------------context--------------------------------------------------------------')
     data['realtime'] = data['context_timestamp'].apply(timestamp_datetime)
@@ -67,6 +65,24 @@ def base_process(data):
     data['shop_score_delivery0'] = data['shop_score_delivery'].apply(
             lambda x: 0 if 0.98 >= x >= 0.96 else 1)
     return data
+
+
+def occupation(x):
+    if x == -1 | x == 2003:
+        return 1
+    elif x == 2002:
+        return 2
+    else:
+        return 3
+
+
+def use_star_level(x):
+    if x == -1 | x == 3000:
+        return 1
+    elif x == 3009 | x == 3010:
+        return 2
+    else:
+        return 3
 
 
 def map_hour(x):
@@ -574,15 +590,15 @@ def sub(train, test, best_iter):
     lgb_model = lgb0.fit(X, y)
     predictors = [i for i in X.columns]
     feat_imp = pd.Series(lgb_model.feature_importances_, predictors).sort_values(ascending=False)
-    print(feat_imp)
-    print(feat_imp.shape)
+    print("feat_imp:", feat_imp)
+    print("feat_imp_shape:", feat_imp.shape)
     pred = lgb_model.predict_proba(test[col])[:, 1]
     test['predicted_score'] = pred
     sub1 = test[['instance_id', 'predicted_score']]
     sub = pd.read_csv("input/test.txt", sep="\s+")
     sub = pd.merge(sub, sub1, on=['instance_id'], how='left')
     sub = sub.fillna(0)
-    sub[['instance_id', 'predicted_score']].to_csv('result/result0418.txt', sep=" ", index=False)
+    sub[['instance_id', 'predicted_score']].to_csv('result/result0420.txt', sep=" ", index=False)
 
 
 def result(model, train, test):
@@ -599,21 +615,26 @@ def result(model, train, test):
 
 
 def model_log_loss(model, train):
-    # col = [c for c in train if
-    #        c not in ['is_trade', 'item_category_list', 'item_property_list',
-    #                  'predict_category_property', 'instance_id',
-    #                  'context_id', 'realtime', 'context_timestamp']]
-    col = ['item_price_level', 'item_sales_level', 'item_collected_level', 'item_pv_level',
-           'user_gender_id', 'user_age_level', 'user_star_level', 'context_page_id',
-           'shop_review_num_level', 'shop_review_positive_rate', 'shop_star_level',
-           'shop_score_service', 'shop_score_delivery', 'shop_score_description'
-        , 'item_id_shop_rev_cnt', 'item_id_shop_rev_prob', 'item_brand_id_shop_rev_cnt',
-           'item_brand_id_shop_rev_prob', 'item_city_id_shop_rev_cnt', 'item_city_id_shop_rev_prob',
-           'item_price_level_shop_rev_cnt', 'item_price_level_shop_rev_prob',
-           'item_sales_level_shop_rev_cnt', 'item_sales_level_shop_rev_prob',
-           'item_collected_level_shop_rev_cnt', 'item_collected_level_shop_rev_prob',
-           'item_pv_level_shop_rev_cnt', 'item_pv_level_shop_rev_prob']
+    col = [c for c in train if
+           c not in ['is_trade', 'item_category_list', 'item_property_list',
+                     'predict_category_property', 'instance_id',
+                     'context_id', 'context_page_id', 'realtime', 'context_timestamp']]
+    # col = ['item_price_level', 'item_sales_level', 'item_collected_level', 'item_pv_level',
+    #        'user_gender_id', 'user_age_level', 'user_star_level', 'context_page_id',
+    #        'user_occupation_id',
+    #        'item_category_list2', 'item_property_list3', 'gender0', 'age0', 'occupation0', 'star0',
+    #        'day', 'hour', 'predict_category_property2', 'shop_score_delivery0', 'normal_shop',
+    #        'user_cnt1', 'item_cnt1','sale_price',
+    #        'shop_review_num_level', 'shop_review_positive_rate', 'shop_star_level',
+    #        'shop_score_service', 'shop_score_delivery', 'shop_score_description',
+    #        'item_id_shop_rev_cnt', 'item_id_shop_rev_prob', 'item_brand_id_shop_rev_cnt',
+    #        'item_brand_id_shop_rev_prob', 'item_city_id_shop_rev_cnt', 'item_city_id_shop_rev_prob',
+    #        'item_price_level_shop_rev_cnt', 'item_price_level_shop_rev_prob',
+    #        'item_sales_level_shop_rev_cnt', 'item_sales_level_shop_rev_prob',
+    #        'item_collected_level_shop_rev_cnt', 'item_collected_level_shop_rev_prob',
+    #        'item_pv_level_shop_rev_cnt', 'item_pv_level_shop_rev_prob']
     X = train[col]
+    X.fillna(0)
     Y = train['is_trade'].values
     # X.to_csv('result/feature_a.txt', sep=" ", index=False)
     X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.4, random_state=0)
@@ -642,10 +663,11 @@ if __name__ == "__main__":
     data = user_shop(data)
     data = shop_item(data)
     train = data[data.is_trade.notnull()]
+    train.to_csv('result/feature_a_0422.txt', sep=" ", index=False)
     # train = data[(data['day'] >= 18) & (data['day'] <= 23)]
     # test = data[(data['day'] == 24)]
-    X_train, X_test = train_test_split(train, test_size=0.4, random_state=0)
-    best_iter = lgbCV(X_train, X_test)
+    # X_train, X_test = train_test_split(train, test_size=0.1, random_state=0)
+    # best_iter = lgbCV(train, test)
     # train = data[data.is_trade.notnull()]
     # test = data[data.is_trade.isnull()]
     # sub(train, test, best_iter)
