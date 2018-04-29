@@ -3,13 +3,15 @@ import pandas as pd
 
 def source():
     train = pd.read_csv('input/train.txt', sep='\s+')
-    test = pd.read_csv('input/test.txt', sep='\s+')
+    d = train.sample(frac=0.2)
+    d.to_csv('input/train_sample.txt', sep=' ', index=False)
+    # test = pd.read_csv('input/test.txt', sep='\s+')
 
-    print(len(train))
-    print(len(test))
+    # print(len(train))
+    # print(len(test))
 
-    for c in train.columns:
-        print(c)
+    # for c in train.columns:
+    #     print(c)
 
 
 def feature():

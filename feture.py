@@ -600,7 +600,7 @@ def sub(train, test, best_iter):
     sub = pd.read_csv("input/test.txt", sep="\s+")
     sub = pd.merge(sub, sub1, on=['instance_id'], how='left')
     sub = sub.fillna(0)
-    sub[['instance_id', 'predicted_score']].to_csv('result/result0420.txt', sep=" ", index=False)
+    sub[['instance_id', 'predicted_score']].to_csv('result/result0428.txt', sep=" ", index=False)
 
 
 def result(model, train, test):
@@ -660,7 +660,7 @@ def model_log_loss(model, train):
 
 
 if __name__ == "__main__":
-    train = pd.read_csv("input/train.txt", sep="\s+")
+    train = pd.read_csv("input/train_sample.txt", sep="\s+")
     test = pd.read_csv("input/test.txt", sep="\s+")
     data = pd.concat([train, test])
     data = data.drop_duplicates(subset='instance_id')
@@ -668,7 +668,7 @@ if __name__ == "__main__":
     data = base_process(data)
     data = encodeHour(data)
     data = shop_fenduan(data)
-    data = slide_cnt(data)
+    # data = slide_cnt(data)
     data = zuhe(data)
     data = item(data)
     data = user(data)
@@ -677,13 +677,13 @@ if __name__ == "__main__":
     data = shop_item(data)
     # train = data[data.is_trade.notnull()]
     # train.to_csv('result/feature_a_0422.txt', sep=" ", index=False)
-    train = data[(data['day'] >= 18) & (data['day'] <= 23)]
-    test = data[(data['day'] == 24)]
-    # X_train, X_test = train_test_split(train, test_size=0.1, random_state=0)
-    best_iter = lgbCV(train, test)
+    # train = data[(data['day'] >= 18) & (data['day'] <= 23)]
+    # test = data[(data['day'] == 24)]
+    X_train, X_test = train_test_split(train, test_size=0.2, random_state=0)
+    best_iter = lgbCV(X_train, X_test)
     train = data[data.is_trade.notnull()]
     test = data[data.is_trade.isnull()]
-    test.to_csv('result/test_0422.txt', sep=" ", index=False)
+    # test.to_csv('result/test_0422.txt', sep=" ", index=False)
     sub(train, test, best_iter)
     # result(LogisticRegression(C=10, n_jobs=-1), train, test)
     # model_log_loss(LogisticRegression(C=10, n_jobs=-1), train)

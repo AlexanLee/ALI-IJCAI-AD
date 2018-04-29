@@ -4,3 +4,5 @@ data
 input
 result
 .ipynb_checkpoints
+*.log
+example/titanic/*.log
