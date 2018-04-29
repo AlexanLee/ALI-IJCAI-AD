@@ -6,3 +6,4 @@ result
 .ipynb_checkpoints
 *.log
 example/titanic/*.log
+*.pyc

@@ -233,7 +233,7 @@ class LRS_SA_RGSS_combination():
         self.columnname.append(self.remain)
 
 
-class Select():
+class Select:
     def __init__(self, Sequence=True, Random=True, Cross=True):
         self.Sequence = Sequence
         self.Random = Random
