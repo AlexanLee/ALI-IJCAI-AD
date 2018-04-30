@@ -194,4 +194,4 @@ with timer('Predict test'):
     test['predicted_score'] = clf_lgb.predict(df_full_processed[1][features],
                                               num_iteration=clf_lgb.best_iteration)
     test = test.sort_values(by='raw_index').reset_index().iloc[:, 1:]
-    test[['instance_id', 'predicted_score']].to_csv('result0430.txt', index=False, sep=' ')
+    test[['instance_id', 'predicted_score']].to_csv('result/result0430.txt', index=False, sep=' ')
