@@ -1,10 +1,9 @@
+import time
 import warnings
 
 import lightgbm as lgb
 import pandas as pd
-import time
 from sklearn import preprocessing
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 from sklearn.model_selection import train_test_split
 
@@ -57,13 +56,13 @@ def base_process(data):
                         lambda x: str(str(x).split(';')[i]) if len(str(x).split(';')) > i else ''))
     print('context 0,1 feature')
     data['context_page0'] = data['context_page_id'].apply(
-            lambda x: 1 if x == 4001 | x == 4002 | x == 4003 | x == 4004 | x == 4007 else 2)
+            lambda x: 1 if x == 4001 | x == 4002 | x == 4003 | x == 4004 | x == 4005 else 2)
     print(
         '--------------------------------------------------------------shop--------------------------------------------------------------')
     for col in ['shop_id']:
         data[col] = lbl.fit_transform(data[col])
-    data['shop_score_delivery0'] = data['shop_score_delivery'].apply(
-            lambda x: 0 if 0.98 >= x >= 0.96 else 1)
+    # data['shop_score_delivery0'] = data['shop_score_delivery'].apply(
+    #         lambda x: 0 if 0.98 >= x >= 0.96 else 1)
     return data
 
 
@@ -88,7 +87,7 @@ def use_star_level(x):
 def map_hour(x):
     if (x >= 7) & (x <= 12):
         return 1
-    elif (x >= 13) & (x <= 20):
+    elif (x >= 13) & (x <= 22):
         return 2
     else:
         return 3
@@ -366,7 +365,6 @@ def user(data):
         data = pd.merge(data, itemcnt, on=[col, 'user_occupation_id'], how='left')
         data[str(col) + '_user_occ_prob'] = data[str(col) + '_user_occ_cnt'] / data['user_occ_cnt']
     del data['user_occ_cnt']
-
     return data
 
 
@@ -548,11 +546,12 @@ def sub(train, test, best_iter):
     sub = pd.read_csv("input/test.txt", sep="\s+")
     sub = pd.merge(sub, sub1, on=['instance_id'], how='left')
     sub = sub.fillna(0)
-    sub[['instance_id', 'predicted_score']].to_csv('result/result0501.txt', sep=" ", index=False)
+    sub[['instance_id', 'predicted_score']].to_csv('result/result0502.txt', sep=" ", index=False)
 
-if __name__ == "__main__":
+
+def feature():
     train = pd.read_csv("input/train.txt", sep="\s+")
-    test = pd.read_csv("input/test.txt", sep="\s+")
+    test = pd.read_csv("input/round1_test_a.txt", sep="\s+")
     data = pd.concat([train, test])
     data = data.drop_duplicates(subset='instance_id')
     print('make feature')
@@ -561,20 +560,24 @@ if __name__ == "__main__":
     data = shop_fenduan(data)
     data = item(data)
     data = user(data)
-    # data.to_csv('result/feature_all.txt', sep=" ", index=False)
-    # data = zuhe(data)
-    # data = user_item(data)
-    # data = user_shop(data)
-    # data = shop_item(data)
+    col = [c for c in data if
+           c not in ['is_trade']]
+    X = data[col]
+    X['is_trade']=data['is_trade'].values
+    X.to_csv('input/feature_test.txt', sep=" ", index=False)
+
+
+def train():
+    data = pd.read_csv("input/feature_test.txt", sep="\s+")
     train = data[data.is_trade.notnull()]
-    # train.to_csv('result/feature_a_0422.txt', sep=" ", index=False)
-    # train = data[(data['day'] >= 18) & (data['day'] <= 23)]
-    # test = data[(data['day'] == 24)]
     X_train, X_test = train_test_split(train, test_size=0.2, random_state=0)
     best_iter = lgbCV(X_train, X_test)
-    # train = data[data.is_trade.notnull()]
     test = data[data.is_trade.isnull()]
-    # test.to_csv('result/test_0422.txt', sep=" ", index=False)
     sub(train, test, best_iter)
     # result(LogisticRegression(C=10, n_jobs=-1), train, test)
     # model_log_loss(LogisticRegression(C=10, n_jobs=-1), train)
+
+
+if __name__ == "__main__":
+    # feature()
+    train()
