@@ -9,7 +9,7 @@ import numpy as np
 
 def prepareData():
     """prepare you dataset here"""
-    df = pd.read_csv('input/train.txt', sep='\s+')
+    df = pd.read_csv('input/feature_test.txt', sep='\s+')
     df = df[~pd.isnull(df.is_trade)]
     item_category_list_unique = list(np.unique(df.item_category_list))
     df.item_category_list.replace(item_category_list_unique,
@@ -65,11 +65,11 @@ def main():
     sf.ImportDF(prepareData(), label='is_trade')
     sf.ImportLossFunction(modelscore, direction='descend')
     sf.ImportCrossMethod(CrossMethod)
-    sf.NonTrainableFeatures = ['used', 'instance_id', 'item_property_list', 'context_id',
+    sf.NonTrainableFeatures = ['instance_id', 'item_property_list', 'context_id',
                                'context_timestamp', 'predict_category_property', 'is_trade']
     sf.InitialFeatures(
             ['item_category_list', 'item_price_level', 'item_sales_level', 'item_collected_level',
-             'item_pv_level'])
+             'item_pv_level', 'day'])
     sf.clf = lgbm.LGBMClassifier(random_state=1, num_leaves=6, n_estimators=5000, max_depth=3,
                                  learning_rate=0.05, n_jobs=8)
     sf.logfile = 'record.log'

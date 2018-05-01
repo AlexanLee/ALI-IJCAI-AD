@@ -88,7 +88,7 @@ def use_star_level(x):
 def map_hour(x):
     if (x >= 7) & (x <= 12):
         return 1
-    elif (x >= 13) & (x <= 20):
+    elif (x >= 13) & (x <= 23):
         return 2
     else:
         return 3

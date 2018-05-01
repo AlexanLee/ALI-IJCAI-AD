@@ -85,9 +85,9 @@ def use_star_level(x):
 
 
 def map_hour(x):
-    if (x >= 7) & (x <= 12):
+    if (x >= 0) & (x <= 9):
         return 1
-    elif (x >= 13) & (x <= 22):
+    elif (x >= 10) & (x <= 16):
         return 2
     else:
         return 3
@@ -495,9 +495,13 @@ def lgbCV(train, test):
     print('Training LGBM model...')
     lgb0 = lgb.LGBMClassifier(
             objective='binary',
-            num_leaves=35,
+            num_leaves=255,
+            num_trees=100,
+            num_thread=16,
+            n_jobs=1,
+            two_round=True,
             max_depth=8,
-            learning_rate=0.03,
+            learning_rate=0.1,
             seed=2018,
             colsample_bytree=0.8,
             subsample=0.9,
@@ -527,9 +531,13 @@ def sub(train, test, best_iter):
     print('Training LGBM model...')
     lgb0 = lgb.LGBMClassifier(
             objective='binary',
-            num_leaves=35,
+            num_leaves=255,
+            num_trees=100,
+            num_thread=16,
+            n_jobs=1,
+            two_round=True,
             max_depth=8,
-            learning_rate=0.03,
+            learning_rate=0.1,
             seed=2018,
             colsample_bytree=0.8,
             subsample=0.9,
@@ -543,7 +551,7 @@ def sub(train, test, best_iter):
     pred = lgb_model.predict_proba(test[col])[:, 1]
     test['predicted_score'] = pred
     sub1 = test[['instance_id', 'predicted_score']]
-    sub = pd.read_csv("input/test.txt", sep="\s+")
+    sub = pd.read_csv("input/round1_test_a.txt", sep="\s+")
     sub = pd.merge(sub, sub1, on=['instance_id'], how='left')
     sub = sub.fillna(0)
     sub[['instance_id', 'predicted_score']].to_csv('result/result0502.txt', sep=" ", index=False)
@@ -563,13 +571,15 @@ def feature():
     col = [c for c in data if
            c not in ['is_trade']]
     X = data[col]
-    X['is_trade']=data['is_trade'].values
+    X['is_trade'] = data['is_trade'].values
     X.to_csv('input/feature_test.txt', sep=" ", index=False)
 
 
 def train():
     data = pd.read_csv("input/feature_test.txt", sep="\s+")
     train = data[data.is_trade.notnull()]
+    # X_train = data[(data['day'] != 6)]
+    # X_test = data[(data['day'] == 6)]
     X_train, X_test = train_test_split(train, test_size=0.2, random_state=0)
     best_iter = lgbCV(X_train, X_test)
     test = data[data.is_trade.isnull()]
