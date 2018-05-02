@@ -49,6 +49,7 @@ def base_process(data):
     data['realtime'] = pd.to_datetime(data['realtime'])
     data['day'] = data['realtime'].dt.day
     data['hour'] = data['realtime'].dt.hour
+    data['week'] = data['realtime'].dt.dayofweek
     data['len_predict_category_property'] = data['predict_category_property'].map(
             lambda x: len(str(x).split(';')))
     for i in range(5):
