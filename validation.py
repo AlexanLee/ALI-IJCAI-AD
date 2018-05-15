@@ -74,8 +74,8 @@ def true_predict_recall(true_lst, pred_lst):
 
 
 with timer('Read train and test'):
-    train = pd.read_csv('input/train.txt', delimiter=' ')
-    test = pd.read_csv('input/test.txt', delimiter=' ')
+    train = pd.read_csv('input/train_all.txt', delimiter=' ')
+    test = pd.read_csv('input/round2_ijcai_18_test_b_20180510.txt', delimiter=' ')
 
     train = train.sort_values(by='context_timestamp').reset_index().iloc[:, 1:]
     test['raw_index'] = np.arange(test.shape[0])
@@ -172,7 +172,7 @@ with timer('Prepare for LGBM'):
         'application': 'binary'
         , 'learning_rate': 0.009
         , 'max_depth': 4
-        , 'num_leaves': 15
+        , 'num_leaves': 35
         , 'min_child_samples': 20
         , 'subsample': 0.8
         , 'colsample_bytree': 0.3
@@ -194,4 +194,4 @@ with timer('Predict test'):
     test['predicted_score'] = clf_lgb.predict(df_full_processed[1][features],
                                               num_iteration=clf_lgb.best_iteration)
     test = test.sort_values(by='raw_index').reset_index().iloc[:, 1:]
-    test[['instance_id', 'predicted_score']].to_csv('result/result0430.txt', index=False, sep=' ')
+    test[['instance_id', 'predicted_score']].to_csv('result/result0515.txt', index=False, sep=' ')

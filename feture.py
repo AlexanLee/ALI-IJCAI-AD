@@ -556,7 +556,6 @@ def lgbCV(train, test):
             seed=2018,
             colsample_bytree=0.8,
             subsample=0.9,
-            min_sum_hessian_in_leaf=100,
             n_estimators=20000)
     lgb_model = lgb0.fit(X, y, eval_set=[(X_tes, y_tes)], early_stopping_rounds=200)
     best_iter = lgb_model.best_iteration_
@@ -588,7 +587,6 @@ def sub(train, test, best_iter):
             seed=2018,
             colsample_bytree=0.8,
             subsample=0.9,
-            min_sum_hessian_in_leaf=100,
             n_estimators=best_iter)
     lgb_model = lgb0.fit(X, y)
     predictors = [i for i in X.columns]
@@ -601,7 +599,7 @@ def sub(train, test, best_iter):
     sub = pd.read_csv("input/test.txt", sep="\s+")
     sub = pd.merge(sub, sub1, on=['instance_id'], how='left')
     sub = sub.fillna(0)
-    sub[['instance_id', 'predicted_score']].to_csv('result/result0428.txt', sep=" ", index=False)
+    sub[['instance_id', 'predicted_score']].to_csv('result/result0515_1.txt', sep=" ", index=False)
 
 
 def result(model, train, test):
@@ -669,7 +667,7 @@ if __name__ == "__main__":
     data = base_process(data)
     data = encodeHour(data)
     data = shop_fenduan(data)
-    # data = slide_cnt(data)
+    data = slide_cnt(data)
     data = zuhe(data)
     data = item(data)
     data = user(data)

@@ -2,9 +2,9 @@ import pandas as pd
 
 
 def source():
-    train = pd.read_csv('input/train.txt', sep='\s+')
+    train = pd.read_csv('input/train_sample_a.txt', sep='\s+')
     d = train.sample(frac=0.2)
-    d.to_csv('input/train_sample.txt', sep=' ', index=False)
+    d.to_csv('input/train_sample_b.txt', sep=' ', index=False)
     # test = pd.read_csv('input/test.txt', sep='\s+')
 
     # print(len(train))
